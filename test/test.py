@@ -1,11 +1,11 @@
-# test.py —— 路径写死：REF vs GEN 的结构+时间对比
+# test.py ——REF vs GEN 
 from __future__ import annotations
 from pathlib import Path
 import pickle, json
 import networkx as nx
 from networkx.readwrite import json_graph
 
-# ======= 写死路径（改成你的）======
+# ======= path======
 REF_PATH = Path(r"E:/PythonProject5/data/small/Tau_0_Tau_1.gpickle")
 GEN_PATH = Path(r"E:\DAG\src\generated5\gen_like_1754996671.gpickle")
 # ==================================
@@ -83,8 +83,8 @@ def summarize(name: str, G: nx.DiGraph):
     return ts
 
 if __name__ == "__main__":
-    assert REF_PATH.exists(), f"REF 不存在: {REF_PATH}"
-    assert GEN_PATH.exists(), f"GEN 不存在: {GEN_PATH}"
+    assert REF_PATH.exists(), f"REF no: {REF_PATH}"
+    assert GEN_PATH.exists(), f"GEN no: {GEN_PATH}"
     print("REF:", REF_PATH)
     print("GEN:", GEN_PATH)
 
@@ -101,3 +101,4 @@ if __name__ == "__main__":
         print("-- diff (GEN - REF) --")
         print(f"total_T: {diff_total:+.3f} ({rel:+.2f}%)")
         print(f"longest_path_time: {diff_long:+.3f}")
+
