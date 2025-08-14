@@ -1,4 +1,4 @@
-# probe_sources_sinks5.py
+
 from pathlib import Path
 import pickle
 from collections import Counter
@@ -11,7 +11,6 @@ from utils5 import topological_layers
 
 
 def read_any_gpickle(path: Path):
-    """兼容不同 networkx 版本的 gpickle 读取。"""
     try:
         from networkx.readwrite.gpickle import read_gpickle as nx_read_gpickle
         return nx_read_gpickle(path)
@@ -23,14 +22,14 @@ def main():
     files = load_graph_files(DATA_DIR)
     print(f"Found {len(files)} files under {DATA_DIR}")
 
-    # 统计
+  
     dag_ok = 0
     multi_src = 0
     multi_sink = 0
     src_hist = Counter()
     sink_hist = Counter()
 
-    # 报表 CSV
+ 
     out_csv = Path("source_sink_report5.csv")
     with out_csv.open("w", encoding="utf-8") as fcsv:
         fcsv.write("file,N,E,is_dag,L,W,num_sources,num_sinks\n")
@@ -62,15 +61,15 @@ def main():
             if nt != 1:
                 multi_sink += 1
 
-            # 写一行 CSV
+          
             fcsv.write(f"{p.name},{N},{E},{int(is_dag)},{L},{W},{ns},{nt}\n")
 
-            # 只打印“异常”的样本（不是 1 源或 1 汇的）
+            # Print only "abnormal" samples (not 1 source or 1 sink)
             if ns != 1 or nt != 1:
                 print(f"[{i:03d}] {p.name} | N={N}, E={E}, DAG={is_dag}, L={L}, W={W}, "
                       f"sources={ns}, sinks={nt}")
 
-    # 汇总
+    
     print("\n==== SUMMARY ====")
     print(f"DAG count: {dag_ok}/{len(files)}")
     print(f"multi-source (ns!=1): {multi_src}/{len(files)}")
@@ -81,3 +80,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
