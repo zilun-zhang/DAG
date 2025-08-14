@@ -26,23 +26,24 @@ NORM_W = 10.0
 NORM_T = 300.0
 
 
-# === New: loss weights (三层：损失层) ===
+# === New: loss weights  ===
 W_BCE = 1.0
 W_TIME = 0.2
 W_TOTALT = 0.05
 W_LONGEST = 0.05
-W_NODE_TIME_UNI = 0.1    # 新增：节点出边时间一致性
+W_NODE_TIME_UNI = 0.1    
 W_DAG = 0.0
-W_DEG_COV = 0.05       # 度覆盖（强烈建议开）
-W_SRC_SINK_SOFT = 0.02 # 软的单源/单汇
-W_TIME = 0.2       # 边的时间 L1，仅在有边处比较
-W_TOTALT = 0.05    # 让全图总时间接近目标
-W_LONGEST = 0.05   # 约束最长路径时间
-W_TIME_NODE = 0.50      # ★ 节点时间损失（主力）
+W_DEG_COV = 0.05       
+W_SRC_SINK_SOFT = 0.02 
+W_TIME = 0.2      
+W_TOTALT = 0.05    
+W_LONGEST = 0.05   
+W_TIME_NODE = 0.50    
 
 # 软单源/单汇的平滑参数
-SRC_SINK_TAU = 0.1     # “零度阈值”附近
-SRC_SINK_K   = 10.0    # 平滑斜率（越大越趋近于硬阈）
+SRC_SINK_TAU = 0.1     # Near the "zero threshold"
+SRC_SINK_K   = 10.0    # Smoothing slope (the larger the slope, the closer it is to the hard threshold)
 
 # === Device ===
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
