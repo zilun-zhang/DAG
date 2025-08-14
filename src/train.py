@@ -1,4 +1,4 @@
-# train5.py
+# train.py
 from __future__ import annotations
 import math
 from torch.utils.data import DataLoader
@@ -29,7 +29,6 @@ def train_loop():
             T_tgt = batch["T_target"].to(DEVICE)       # [N,N]
             widths = batch["meta"]["widths"]           # list[int]
 
-            # 用 s_vec 里的 total_T（反归一化）
             from config5 import NORM_T
             target_total_T = (s_vec[4] * NORM_T).item()
 
@@ -52,7 +51,6 @@ def train_loop():
             continue
 
         avg_terms = {k: v/steps for k, v in sum_terms.items()}
-        # 用loss权重重算一个可读的显示
         from config5 import (W_BCE, W_TIME, W_TOTALT, W_LONGEST, W_DAG, W_DEG_COV, W_SRC_SINK_SOFT, W_TIME_NODE)
         avg_loss_disp = (W_BCE*avg_terms.get("bce",0.0)
                          + W_TIME*avg_terms.get("time",0.0)
@@ -61,7 +59,7 @@ def train_loop():
                          + W_SRC_SINK_SOFT*avg_terms.get("src_sink",0.0)
                          + W_LONGEST*avg_terms.get("longest",0.0)
                          + W_DAG*avg_terms.get("dag_h",0.0)
-                         + W_TIME_NODE * avg_terms.get("time_node", 0.0)  # ★ 新增
+                         + W_TIME_NODE * avg_terms.get("time_node", 0.0)  
                          )
 
         if epoch % PRINT_EVERY == 0:
@@ -69,14 +67,13 @@ def train_loop():
             terms_str = ", ".join(f"{k}:{avg_terms.get(k,0.0):.4f}" for k in keys)
             print(f"[Epoch {epoch:03d}] loss={avg_loss_disp:.4f} | {terms_str}")
 
-        # 保存 best（按 bce）
+        #  best
         if math.isfinite(avg_terms.get("bce", float("inf"))) and avg_terms["bce"] < best_bce:
             best_bce = avg_terms["bce"]
             ckpt_best = CHECKPOINT_DIR / "decoder_best1.pt"
             torch.save({"model": model.state_dict(), "epoch": epoch}, ckpt_best)
             print(f"Saved BEST checkpoint (bce={best_bce:.4f}) to {ckpt_best}")
 
-        # 阶段性备份
         if SAVE_EVERY and epoch % SAVE_EVERY == 0:
             ckpt_path = CHECKPOINT_DIR / f"decoder_epoch{epoch}.pt"
             torch.save({"model": model.state_dict(), "epoch": epoch}, ckpt_path)
@@ -88,3 +85,4 @@ def train_loop():
 
 if __name__ == "__main__":
     train_loop()
+
