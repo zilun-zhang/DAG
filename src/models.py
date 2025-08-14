@@ -5,8 +5,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from config5 import (DEVICE, EDGE_TIME_MIN)
-from utils5 import distribute_nodes_across_layers, build_order_from_widths, mask_allowed_pairs
+from config import (DEVICE, EDGE_TIME_MIN)
+from utils import distribute_nodes_across_layers, build_order_from_widths, mask_allowed_pairs
 
 
 class MLP(nn.Module):
@@ -26,8 +26,6 @@ class StructureToGraphDecoder5(nn.Module):
 
     def __init__(self, pair_hidden=64, time_hidden=64):
         super().__init__()
-        # 关键：挂在 self 上，才会被注册为可训练参数
-        # 输入特征是 10 维：[li, lj, di, pi_norm, pj_norm] + s(5)
         self.edge_mlp = nn.Sequential(
             nn.Linear(10, pair_hidden), nn.ReLU(),
             nn.Linear(pair_hidden, pair_hidden), nn.ReLU(),
@@ -102,5 +100,6 @@ class StructureToGraphDecoder5(nn.Module):
         neg_inf = torch.finfo(logits.dtype).min
         logits = torch.where(allow > 0.5, logits, torch.full_like(logits, neg_inf))
         time_mat = torch.where(allow > 0.5, time_mat, torch.zeros_like(time_mat))
+
 
         return logits, time_mat, widths
