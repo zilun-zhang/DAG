@@ -40,11 +40,11 @@ W_TOTALT = 0.05
 W_LONGEST = 0.05   
 W_TIME_NODE = 0.50    
 
-# 软单源/单汇的平滑参数
 SRC_SINK_TAU = 0.1     # Near the "zero threshold"
 SRC_SINK_K   = 10.0    # Smoothing slope (the larger the slope, the closer it is to the hard threshold)
 
 # === Device ===
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 
