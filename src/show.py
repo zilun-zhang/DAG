@@ -1,4 +1,4 @@
-# show5.py —— Visualize all edges and highlight cross-layer (skip-layer) edges with "arcs"
+# show.py —— Visualize all edges and highlight cross-layer (skip-layer) edges with "arcs"
 import os, json, gzip, pickle
 from pathlib import Path
 from typing import Dict, Any, Tuple, List
@@ -183,3 +183,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
