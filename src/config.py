@@ -1,4 +1,4 @@
-# config5.py
+# config.py
 from pathlib import Path
 import torch
 
@@ -46,4 +46,5 @@ SRC_SINK_K   = 10.0    # Smoothing slope (the larger the slope, the closer it is
 
 # === Device ===
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
