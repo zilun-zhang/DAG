@@ -1,1 +1,46 @@
-
+| Column | Category | Type | Stage | Meaning |
+|---|---|---|---|---|
+| `ref_path` | Path | string (filepath) | Reference | Path to the reference graph file (used to condition style/scale). |
+| `gen_pre_path` | Path | string (filepath/empty) | Generated (pre-fix) | Path to the generated graph saved **before** any single-source/sink post-fix. Empty if not saved. |
+| `gen_final_path` | Path | string (filepath) | Generated (final) | Path to the generated graph saved **after** all fixes and time processing. |
+| `neighbor_only` | Config | 0/1 | Generation | If 1, edges are only allowed between adjacent layers (ΔL=1); if 0, longer jumps (ΔL>1) are allowed. |
+| `equalize_row_time` | Config | 0/1 | Time processing | If 1, enable *row equalization*: for each source node, set all outgoing edge times to their mean. |
+| `scale_total_time` | Config | 0/1 | Time processing | If 1, scale the generated graph's total time to match the reference total time. |
+| `post_fix` | Config | 0/1 | Post-processing | If 1, enable single-source/single-sink post-fix (adds edges, never removes). |
+| `seed` | Config | int | Generation | Random seed used for generation. |
+| `N_ref` | Stats | int | Reference | Number of nodes in the reference graph. |
+| `E_ref` | Stats | int | Reference | Number of edges in the reference graph. |
+| `L` | Stats | int | Reference | Number of layers in the reference graph (topological layering). |
+| `widths` | Stats | JSON list | Reference | Width of each layer, e.g. [5,6,6,4]. |
+| `srcs_ref` | Stats | int | Reference | Count of sources (in-degree=0) in the reference graph. |
+| `sinks_ref` | Stats | int | Reference | Count of sinks (out-degree=0) in the reference graph. |
+| `no_in_ref` | Stats | int | Reference | Non-first-layer nodes with in-degree=0 (coverage gap—IN) in the reference graph. |
+| `no_out_ref` | Stats | int | Reference | Non-last-layer nodes with out-degree=0 (coverage gap—OUT) in the reference graph. |
+| `deltaL_ref` | Stats | JSON dict | Reference | Histogram of edge layer jumps: key=ΔL (layer difference), value=count. |
+| `time_total_ref` | Time | float | Reference | Sum of all edge times (uses one of critical_time/time/weight/C/t). |
+| `longest_ref` | Time | float | Reference | Weighted longest-path time (edge-time based). |
+| `N_pre` | Stats | int/empty | Generated (pre-fix) | Nodes in the **pre-fix** generated graph; empty if not saved. |
+| `E_pre` | Stats | int/empty | Generated (pre-fix) | Edges in the **pre-fix** generated graph; empty if not saved. |
+| `srcs_pre` | Stats | int/empty | Generated (pre-fix) | Sources in the pre-fix generated graph. |
+| `sinks_pre` | Stats | int/empty | Generated (pre-fix) | Sinks in the pre-fix generated graph. |
+| `no_in_pre` | Stats | int/empty | Generated (pre-fix) | Non-first-layer nodes with in-degree=0 (pre-fix). |
+| `no_out_pre` | Stats | int/empty | Generated (pre-fix) | Non-last-layer nodes with out-degree=0 (pre-fix). |
+| `deltaL_pre` | Stats | JSON/empty | Generated (pre-fix) | Edge ΔL histogram (pre-fix). |
+| `time_total_pre` | Time | float/empty | Generated (pre-fix) | Total edge time (pre-fix). |
+| `longest_pre` | Time | float/empty | Generated (pre-fix) | Weighted longest-path time (pre-fix). |
+| `N_gen` | Stats | int | Generated (final) | Nodes in the **final** generated graph (after fixes). |
+| `E_gen` | Stats | int | Generated (final) | Edges in the **final** generated graph (after fixes). |
+| `srcs_gen` | Stats | int | Generated (final) | Sources in the final generated graph. |
+| `sinks_gen` | Stats | int | Generated (final) | Sinks in the final generated graph. |
+| `no_in_gen` | Stats | int | Generated (final) | Non-first-layer nodes with in-degree=0 (final). |
+| `no_out_gen` | Stats | int | Generated (final) | Non-last-layer nodes with out-degree=0 (final). |
+| `deltaL_gen` | Stats | JSON | Generated (final) | Edge ΔL histogram (final). |
+| `time_total_gen` | Time | float | Generated (final) | Total edge time (after equalization/scaling if enabled). |
+| `time_mean_gen` | Time | float | Generated (final) | Mean edge time (final). |
+| `time_min_gen` | Time | float | Generated (final) | Minimum edge time (final). |
+| `time_max_gen` | Time | float | Generated (final) | Maximum edge time (final). |
+| `longest_gen` | Time | float | Generated (final) | Weighted longest-path time (final). |
+| `cov_added` | Count | int | Generation | Edges added for **degree coverage** (ensure non-first layers have ≥1 in-edge; non-last layers have ≥1 out-edge). |
+| `topk_added` | Count | int | Generation | Edges added by **Top-K selection** to reach the target edge count (a.k.a. the 'tok—added' column). |
+| `post_added` | Count | int | Post-processing | Edges added by **post-fix** to enforce single source/sink (adds only). |
+| `error` | Other | string | Runtime | Error message for the row, if any; empty otherwise. |
