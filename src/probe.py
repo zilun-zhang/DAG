@@ -1,9 +1,9 @@
-# probe5.py
+# probe.py
 from pathlib import Path
 import networkx as nx
 import pickle
-from data5 import load_graph_files, layer_widths
-from utils5 import topological_layers
+from data import load_graph_files, layer_widths
+from utils import topological_layers
 
 from config5 import DATA_DIR
 
@@ -37,4 +37,5 @@ for i, p in enumerate(files[:50]):
         bad += 1
 
 print(f"Potentially unusable (E==0 or L<=1): {bad}/{len(files[:50])}")
+
 
