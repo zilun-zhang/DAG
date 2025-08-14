@@ -19,7 +19,7 @@ files = load_graph_files(DATA_DIR)
 print(f"Found {len(files)} files under {DATA_DIR}")
 
 bad = 0
-for i, p in enumerate(files[:50]):   # 先看前50个
+for i, p in enumerate(files[:50]):   
     G = read_any_gpickle(p)
     if not nx.is_directed(G):
         G = G.to_directed()
@@ -37,3 +37,4 @@ for i, p in enumerate(files[:50]):   # 先看前50个
         bad += 1
 
 print(f"Potentially unusable (E==0 or L<=1): {bad}/{len(files[:50])}")
+
