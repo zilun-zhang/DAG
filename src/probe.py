@@ -5,7 +5,7 @@ import pickle
 from data import load_graph_files, layer_widths
 from utils import topological_layers
 
-from config5 import DATA_DIR
+from config import DATA_DIR
 
 def read_any_gpickle(path):
     try:
@@ -37,5 +37,6 @@ for i, p in enumerate(files[:50]):
         bad += 1
 
 print(f"Potentially unusable (E==0 or L<=1): {bad}/{len(files[:50])}")
+
 
 
