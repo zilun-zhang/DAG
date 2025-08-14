@@ -1,17 +1,17 @@
-# losses5.py
+# losses.py
 from __future__ import annotations
 from typing import List
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from config5 import (
+from config import (
     MAX_LONGEST_PATH_TIME, NORM_T,
     W_BCE, W_TIME, W_TOTALT, W_LONGEST, W_DAG, W_DEG_COV, W_SRC_SINK_SOFT,
     SRC_SINK_TAU, SRC_SINK_K, W_TIME_NODE
 )
-from utils5 import longest_path_time_from_mats
-from config5 import W_NODE_TIME_UNI
+from utils import longest_path_time_from_mats
+from config import W_NODE_TIME_UNI
 
 class LossPack5(nn.Module):
     """Edge BCE + (optional) time item + structure item (degree coverage, soft single source/single sink, longest path, DAG smoothness)"""
@@ -96,7 +96,7 @@ class LossPack5(nn.Module):
         
         in_deg  = sigA.sum(dim=0)
         out_deg = sigA.sum(dim=1)
-        # 近似 1[in_deg==0] ≈ σ(k*(τ - in_deg))
+        #  1[in_deg==0] ≈ σ(k*(τ - in_deg))
         src_soft  = torch.sigmoid(SRC_SINK_K * (SRC_SINK_TAU - in_deg))
         sink_soft = torch.sigmoid(SRC_SINK_K * (SRC_SINK_TAU - out_deg))
         num_src_soft  = src_soft.sum()
@@ -178,4 +178,5 @@ class LossPack5(nn.Module):
             "time_node": float(time_node.detach().item()),  
         }
         return loss, terms
+
 
