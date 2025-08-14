@@ -9,32 +9,28 @@ import torch
 import networkx as nx
 from networkx.readwrite import json_graph
 
-# 项目内模块（保持和你的工程一致）
 from config5 import DEVICE, CHECKPOINT_DIR, NORM_N, NORM_E, NORM_L, NORM_W, NORM_T
 from models5 import StructureToGraphDecoder5
 from utils5 import topological_layers
 
 TIME_KEYS = ["critical_time", "time", "weight", "t", "C", "label"]
 
-# ===== 在文件靠前位置，加入默认配置（可按需改路径）=====
 DEFAULTS = {
-    # 参考图目录（你之前用的小数据目录）
     "ref_dir": r"E:\DAG\data\gpickle1",
-    # 扫描后缀；会额外把 *.json / *.gpickle.gz / *.json.gz 也一起扫
     "pattern": "*.gpickle",
-    # 模型 ckpt
+    # model ckpt
     "ckpt": "decoder_best1.pt",
-    # 输出目录 & CSV 文件名
+    # output
     "outdir": r"E:\DAG\src\generated5",
     "csv": "batch_report.csv",
-    # 结构/随机性/时间/后处理开关
-    "neighbor_only": False,          # True=只允许相邻层（禁长跳）
+    # Structure/Randomness/Time/Post-processing switch
+    "neighbor_only": False,          # True=Only adjacent layers are allowed (no long jumps)
     "seed": 0,
-    "no_equalize_row_time": False,   # True=关闭“行内等化”
-    "no_scale_total_time": False,    # True=关闭“总量缩放到参考”
-    "no_post_fix": False,            # True=关闭“单源/单汇”后处理
-    "save_pre": True,                # 保存后处理前的图
-    "limit": 0                       # 0=全量；>0 只处理前K个
+    "no_equalize_row_time": False,   # True=Turn off "In-line equalization"
+    "no_scale_total_time": False,    # True=Turn off Scale Amount to Reference
+    "no_post_fix": False,            # True=Turn off "Single Source/Single Sink" post-processing
+    "save_pre": True,                # Save the image before post-processing
+    "limit": 0                       # 0=full amount；>0 Only process the first K
 }
 
 
@@ -49,7 +45,6 @@ def edge_time(d: dict, default=0.0) -> float:
     return float(default)
 
 def read_any(path: Path) -> nx.DiGraph:
-    # 读取 gpickle / json(.gz)，兼容老版本 networkx
     path = Path(str(path).strip())
     name = path.name.lower()
     try:
@@ -85,7 +80,6 @@ def write_any_gpickle(G: nx.DiGraph, p: Path):
             pickle.dump(G, f)
 
 def save_graph(G: nx.DiGraph, out_dir: Path, name_prefix: str) -> Tuple[Path, Path]:
-    # 保存为 .gpickle 和 .json
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = int(time.time() * 1000)
     p_g = out_dir / f"{name_prefix}_{stamp}.gpickle"
@@ -115,7 +109,6 @@ def deltaL_hist(G: nx.DiGraph) -> Dict[int, int]:
     return dict(sorted(hist.items()))
 
 def degree_coverage_missing(G: nx.DiGraph) -> Tuple[int, int]:
-    # (非首层缺入度, 非末层缺出度)
     L = layers_by_longest(G)
     Lmax = max(L.values()) if L else 0
     no_in = 0
@@ -177,7 +170,6 @@ def structured_select(prob: torch.Tensor, widths: List[int], E_target: int,
                       neighbor_only: bool, seed: int = 0) -> Tuple[np.ndarray, Dict[str, int]]:
     P = prob.detach().cpu().numpy()
     N = P.shape[0]
-    # 层号数组
     layer: List[int] = []
     for li, w in enumerate(widths):
         layer += [li]*w
@@ -186,8 +178,7 @@ def structured_select(prob: torch.Tensor, widths: List[int], E_target: int,
 
     selected = np.zeros((N, N), dtype=bool)
     cov_added = 0
-
-    # 度覆盖：相邻层
+                          
     for j in range(N):
         lj = layer[j]
         if lj == 0: continue
@@ -206,7 +197,7 @@ def structured_select(prob: torch.Tensor, widths: List[int], E_target: int,
         if not selected[i, j_best]:
             selected[i, j_best] = True; cov_added += 1
 
-    # Top-K 补足到目标边数
+    # Top-K Fill in the target number of edges
     legal = np.zeros_like(P, dtype=bool)
     for i in range(N):
         for j in range(N):
@@ -244,7 +235,6 @@ def build_graph(selected: np.ndarray, widths: List[int], time_mat: Optional[torc
     return G
 
 def enforce_single_src_sink(G: nx.DiGraph) -> Tuple[nx.DiGraph, int]:
-    # 只加不删：把多余源并到最小编号源，把多余汇并到最小编号汇
     G = G.copy(); added = 0
     srcs = [n for n in G if G.in_degree(n) == 0]
     sinks = [n for n in G if G.out_degree(n) == 0]
@@ -268,19 +258,19 @@ def generate_like_one(refG: nx.DiGraph, model: StructureToGraphDecoder5,
                       equalize_row_time: bool, scale_total_time: bool,
                       post_fix: bool, save_pre: bool,
                       outdir: Path, prefix: str) -> Tuple[nx.DiGraph, Optional[nx.DiGraph], Dict[str, float], Dict[str, int], Tuple[Optional[Path], Path]]:
-    # 条件
+   
     s, widths, E_target, T_target = s_from_graph(refG)
 
-    # 前向
+    
     with torch.no_grad():
         logits, time_mat, widths_used = model(s, widths=widths)
         prob = torch.sigmoid(logits)
         prob = torch.where(torch.isfinite(prob), prob, torch.zeros_like(prob))
 
-    # 结构选择
+    # structure
     selected, sel_stats = structured_select(prob, widths_used, E_target, neighbor_only, seed)
 
-    # 时间处理
+    # time
     if time_mat is not None:
         T = time_mat.detach().cpu().numpy().copy()
         ii, jj = np.where(selected)
@@ -297,24 +287,23 @@ def generate_like_one(refG: nx.DiGraph, model: StructureToGraphDecoder5,
                 T[ii, jj] *= (T_target / pred_total)
         time_mat = torch.as_tensor(T, dtype=time_mat.dtype, device=time_mat.device)
 
-    # 构图
+ 
     G_pre = build_graph(selected, widths_used, time_mat)
 
-    # 保存 pre
+    # save pre
     pre_path = None
     if save_pre:
         pre_path, _ = save_graph(G_pre, outdir, prefix + "_pre")
 
-    # 单源/单汇
+    # Single source/single remittance
     if post_fix:
         G_final, post_added = enforce_single_src_sink(G_pre)
     else:
         G_final, post_added = G_pre, 0
 
-    # 保存 final
+    # save final
     final_path, _ = save_graph(G_final, outdir, prefix)
 
-    # 统计
     Tref, _, _, _ = time_stats(refG)
     Tgen, Tmean, Tmin, Tmax = time_stats(G_final)
     time_dict = {
@@ -367,9 +356,7 @@ def main():
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
-    # 收集文件
     files: List[Path] = sorted(ref_dir.glob(args.pattern))
-    # 若 pattern 为 *.gpickle，再额外扫 json/gz
     if args.pattern == "*.gpickle":
         files += sorted(ref_dir.glob("*.json"))
         files += sorted(ref_dir.glob("*.gpickle.gz"))
@@ -382,10 +369,8 @@ def main():
         print("No reference graphs found.")
         return
 
-    # 载模型（一次）
     model = load_model(args.ckpt)
 
-    # CSV 准备
     csv_path = outdir / args.csv
     fieldnames = [
         "ref_path", "gen_pre_path", "gen_final_path",
@@ -422,7 +407,6 @@ def main():
             }
             try:
                 refG = read_any(ref_path)
-                # 参考统计
                 N_ref, E_ref = refG.number_of_nodes(), refG.number_of_edges()
                 Ls = topological_layers(refG);
                 widths = [len(Li) for Li in Ls]
@@ -432,7 +416,7 @@ def main():
                 Tref, _, _, _ = time_stats(refG)
                 LPT_ref = longest_path_time(refG)
 
-                # ===== 生成 =====
+                # ===== generate =====
                 prefix = f"gen_like_{idx:05d}"
                 G_final, G_pre, tstats, sstats, (pre_path, final_path) = generate_like_one(
                     refG, model,
@@ -446,7 +430,7 @@ def main():
                     prefix=prefix
                 )
 
-                # ===== pre 的统计（后处理前）=====
+                # ===== Statistics of pre (before post-processing) =====
                 if G_pre is not None:
                     N_pre, E_pre = G_pre.number_of_nodes(), G_pre.number_of_edges()
                     src_pre, sink_pre = single_src_sink_counts(G_pre)
@@ -459,13 +443,13 @@ def main():
                     H_pre = {}
                     Tpre = LPT_pre = ""
 
-                # ===== final 的统计（后处理后）=====
+                # ===== Final statistics (after post-processing) =====
                 N_gen, E_gen = G_final.number_of_nodes(), G_final.number_of_edges()
                 src_gen, sink_gen = single_src_sink_counts(G_final)
                 no_in_gen, no_out_gen = degree_coverage_missing(G_final)
                 H_gen = deltaL_hist(G_final)
 
-                # ===== 写 CSV =====
+                # =====  CSV =====
                 row.update({
                     "gen_pre_path": (str(pre_path) if pre_path else ""),
                     "gen_final_path": str(final_path),
@@ -502,3 +486,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
