@@ -4,10 +4,10 @@ import math
 from torch.utils.data import DataLoader
 import torch
 
-from config5 import DEVICE, CHECKPOINT_DIR, EPOCHS, LR, PRINT_EVERY, SAVE_EVERY
-from data5 import GraphStructureDataset5
-from models5 import StructureToGraphDecoder5
-from losses5 import LossPack5
+from config import DEVICE, CHECKPOINT_DIR, EPOCHS, LR, PRINT_EVERY, SAVE_EVERY
+from data import GraphStructureDataset5
+from models import StructureToGraphDecoder5
+from losses import LossPack5
 
 def train_loop():
     ds = GraphStructureDataset5(data_dir=__import__("config5").DATA_DIR)
@@ -85,4 +85,5 @@ def train_loop():
 
 if __name__ == "__main__":
     train_loop()
+
 
