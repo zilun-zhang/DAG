@@ -1,4 +1,4 @@
-# data5.py —— read (A_target, T_target, widths, s_vec, total_T)
+# data.py —— read (A_target, T_target, widths, s_vec, total_T)
 from __future__ import annotations
 from pathlib import Path
 from typing import Tuple, List, Dict, Any
@@ -10,8 +10,8 @@ import networkx as nx
 from torch.utils.data import Dataset
 from networkx.readwrite import json_graph
 
-from utils5 import topological_layers
-from config5 import NORM_N, NORM_E, NORM_L, NORM_W, NORM_T
+from utils import topological_layers
+from config import NORM_N, NORM_E, NORM_L, NORM_W, NORM_T
 
 
 TIME_KEYS = ["critical_time", "time", "weight", "t", "C", "label"]
@@ -113,4 +113,5 @@ class GraphStructureDataset5(Dataset):
 
 def graph_total_time(G: nx.DiGraph) -> float:
     return sum(edge_time_from_attr(d, 1.0) for _, _, d in G.edges(data=True))
+
 
