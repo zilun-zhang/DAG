@@ -1,4 +1,4 @@
-# infer5.py —— Generate a similar DAG using the reference graph; time is quantized into integers by "node" and the total duration is calibrated
+# infer.py —— Generate a similar DAG using the reference graph; time is quantized into integers by "node" and the total duration is calibrated
 from __future__ import annotations
 import argparse, time, pickle, json, math
 from pathlib import Path
@@ -9,9 +9,9 @@ import networkx as nx
 import torch
 from networkx.readwrite import json_graph
 
-from config5 import DEVICE, CHECKPOINT_DIR, NORM_N, NORM_E, NORM_L, NORM_W, NORM_T
-from models5 import StructureToGraphDecoder5
-from utils5 import topological_layers
+from config import DEVICE, CHECKPOINT_DIR, NORM_N, NORM_E, NORM_L, NORM_W, NORM_T
+from models import StructureToGraphDecoder5
+from utils import topological_layers
 
 
 TIME_KEYS = ["critical_time", "time", "weight", "t", "C", "label"]
@@ -351,4 +351,5 @@ if __name__ == "__main__":
     G = generate_like(REF_PATH, CKPT, NEIGHBOR_ONLY, SEED, integerize_time=True)
     report_graph(G)
     save_graph(G, OUTDIR, PREFIX)
+
 
