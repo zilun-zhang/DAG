@@ -1,4 +1,4 @@
-# show_fixed.py —— 可视化所有边，并用“弧线”突出显示跨层（跳层）边
+# show_fixed.py —— Visualization
 import os, json, gzip, pickle
 from pathlib import Path
 from typing import Dict, Any, Tuple, List
@@ -6,19 +6,18 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.readwrite import json_graph
 
-# ======= 在这里填入你的图路径（可多个）======
+# ======= path======
 PATHS = [
     r"E:\DAG\src\generated5\gen_like_1754996671.gpickle",
     r"E:\PythonProject5\data\small\Tau_0_Tau_1.gpickle",
 ]
-SAVE_PNG = False   # True 则保存 PNG 到同目录，后缀 _vis.png
-SHOW_TIME = True   # 边上标注 critical_time
-# ====================================
+SAVE_PNG = False   # True to save the PNG to the same directory
+SHOW_TIME = True   # Label the edge with critical_time
+
 
 TIME_KEYS = ["critical_time", "time", "weight", "t", "C", "label"]
 
 def normalize_edge_time_key(G: nx.DiGraph, default: float = 0.0) -> None:
-    """将各种时间键规范到 G[u][v]['critical_time']"""
     for u, v, d in G.edges(data=True):
         val = None
         for k in TIME_KEYS:
@@ -36,15 +35,13 @@ def _load_gpickle(path):
     with open(path, "rb") as f:
         return pickle.load(f)
 
-# 2) 读取 .gpickle.gz
 def _load_gpickle_gz(path):
     read_gpickle = getattr(nx, "read_gpickle", None)
     with gzip.open(path, "rb") as f:
         if read_gpickle is not None:
-            return read_gpickle(f)  # 支持文件对象
+            return read_gpickle(f)  
         return pickle.load(f)
 
-# 3) 修正 load_graph（只改这几个分支即可）
 def load_graph(path: str):
     p = Path(path)
     if not p.exists():
@@ -65,12 +62,10 @@ def load_graph(path: str):
         raise ValueError(f"Unsupported file type: {p.suffix}")
     if not isinstance(G, nx.DiGraph):
         G = G.to_directed()
-    # 这里保持你原来的 normalize_edge_time_key 调用
     normalize_edge_time_key(G)
     return G
 
 def longest_path_layers(G: nx.DiGraph) -> Dict[Any, int]:
-    """按最长路径距离分层（topo DP）"""
     order = list(nx.topological_sort(G))
     L = {u: 0 for u in order}
     for u in order:
@@ -79,7 +74,6 @@ def longest_path_layers(G: nx.DiGraph) -> Dict[Any, int]:
     return L
 
 def build_positions(L: Dict[Any, int]) -> Dict[Any, Tuple[float, float]]:
-    """按层等距排布，层向下递增"""
     layers: Dict[int, List[Any]] = {}
     for n, lv in L.items():
         layers.setdefault(lv, []).append(n)
@@ -96,7 +90,6 @@ def build_positions(L: Dict[Any, int]) -> Dict[Any, Tuple[float, float]]:
     return pos
 
 def draw_graph(G: nx.DiGraph, title: str = "", show_edge_time: bool = True):
-    """显示所有边；跳层（ΔL>1）画弧线并标注 ΔL"""
     L = longest_path_layers(G)
     for n, lv in L.items():
         G.nodes[n]["layer"] = lv
@@ -105,20 +98,19 @@ def draw_graph(G: nx.DiGraph, title: str = "", show_edge_time: bool = True):
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.set_title(title, fontsize=12)
 
-    # 画节点（按层着不同 marker）
     xs = [pos[n][0] for n in G.nodes()]
     ys = [pos[n][1] for n in G.nodes()]
     nx.draw_networkx_nodes(G, pos, node_size=400, ax=ax)
     nx.draw_networkx_labels(G, pos, font_size=9, ax=ax)
 
-    # 画边：ΔL==1 直线；ΔL>1 弧线；ΔL<=0（异常）红虚线
+    # Draw edge: ΔL==1 straight line; ΔL>1 arc; ΔL<=0 (abnormal) red dotted line
     def _arc(u_xy, v_xy, rad):
         from matplotlib.patches import FancyArrowPatch
         return FancyArrowPatch(
             u_xy, v_xy, arrowstyle="-|>", mutation_scale=10,
             connectionstyle=f"arc3,rad={rad}", linewidth=1.2, alpha=0.9)
 
-    # 为了避免多条长跳重合，按 (ΔL, idx) 设不同弧度
+    # To avoid overlapping of multiple long jumps, set different arcs according to (ΔL, idx)
     long_count = 0
     for u, v, d in G.edges(data=True):
         lu, lv = L[u], L[v]
@@ -127,29 +119,23 @@ def draw_graph(G: nx.DiGraph, title: str = "", show_edge_time: bool = True):
         u_xy, v_xy = pos[u], pos[v]
         t = d.get("critical_time", 0.0)
         if dv == 1:
-            # 相邻层：直线
             ax.annotate(
                 "", xy=v_xy, xytext=u_xy,
                 arrowprops=dict(arrowstyle="-|>", lw=1.2, alpha=0.9))
         elif dv > 1:
-            # 跳层：弧线（弧度跟 ΔL 相关）
             long_count += 1
-            rad = 0.25 + 0.08 * min(dv-1, 3)  # ΔL 越大弧度越大（上限 3）
-            # 奇偶交替方向，减少重叠
+            rad = 0.25 + 0.08 * min(dv-1, 3)  
             if long_count % 2 == 0:
                 rad = -rad
             patch = _arc(u_xy, v_xy, rad)
             ax.add_patch(patch)
-            # ΔL 标签
             mid = ((u_xy[0]+v_xy[0])/2, (u_xy[1]+v_xy[1])/2 + (0.6 if rad>0 else -0.6))
             ax.text(mid[0], mid[1], f"ΔL={dv}", fontsize=8, ha="center", va="center")
         else:
-            # 非法方向（应当很少见）：红虚线
             ax.annotate(
                 "", xy=v_xy, xytext=u_xy,
                 arrowprops=dict(arrowstyle="-|>", lw=1.2, ls="--", color="r", alpha=0.7))
 
-    # 边时间标签（放在中点）
     if show_edge_time:
         for u, v, d in G.edges(data=True):
             u_xy, v_xy = pos[u], pos[v]
@@ -165,7 +151,6 @@ def total_time(G: nx.DiGraph) -> float:
     return sum(G[u][v].get("critical_time", 0.0) for u, v in G.edges())
 
 def print_time_stats(G: nx.DiGraph, name: str = ""):
-    # 关键路径（按边时间）最长路径
     order = list(nx.topological_sort(G))
     dist = {u: 0.0 for u in order}
     for u in order:
@@ -178,7 +163,7 @@ def print_time_stats(G: nx.DiGraph, name: str = ""):
 
 def main():
     if not PATHS:
-        print("PATHS 为空，请先在文件顶部填写你的图路径。")
+        print("PATHS is empty, please fill in your image path at the top of the file first。")
 
         return
     for p in PATHS:
@@ -194,4 +179,5 @@ def main():
         plt.show()
 
 if __name__ == "__main__":
+
     main()
